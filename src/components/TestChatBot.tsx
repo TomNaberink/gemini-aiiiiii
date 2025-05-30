@@ -1,12 +1,43 @@
 'use client'
 
 import { useState } from 'react'
+import FileUpload from '@/components/FileUpload'
 
 export default function TestChatBot() {
   const [message, setMessage] = useState('')
   const [response, setResponse] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'bot', content: string }>>([])
+  const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'bot', content: string, attachment?: { name: string, content: string } }>>([])
+
+  const handleFileUpload = async (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const response = await fetch('/api/upload-docx', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('Fout bij uploaden')
+      }
+
+      const data = await response.json()
+      
+      // Add file content to the message
+      const fileMessage = `Analyseer dit document en geef me een samenvatting:\n\n${data.content}`
+      setMessage(fileMessage)
+      
+      return {
+        name: file.name,
+        content: data.content
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+      return null
+    }
+  }
 
   const sendMessage = async () => {
     if (!message.trim()) return
@@ -74,6 +105,13 @@ export default function TestChatBot() {
                     : 'bg-gray-100 text-gray-800'
                 }`}
               >
+                {msg.attachment && (
+                  <div className="mb-2 p-2 bg-blue-700 rounded">
+                    <p className="text-sm text-white">
+                      📎 {msg.attachment.name}
+                    </p>
+                  </div>
+                )}
                 <p className="whitespace-pre-wrap">{msg.content}</p>
               </div>
             </div>
@@ -94,23 +132,26 @@ export default function TestChatBot() {
 
       {/* Input Area */}
       <div className="border-t border-gray-200 p-4">
-        <div className="flex space-x-4">
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Stel je vraag over economie..."
-            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            disabled={isLoading}
-          />
-          <button
-            onClick={sendMessage}
-            disabled={isLoading || !message.trim()}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Verstuur
-          </button>
+        <div className="space-y-4">
+          <FileUpload onFileUpload={handleFileUpload} />
+          <div className="flex space-x-4">
+            <input
+              type="text"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Stel je vraag over economie..."
+              className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={isLoading}
+            />
+            <button
+              onClick={sendMessage}
+              disabled={isLoading || !message.trim()}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Verstuur
+            </button>
+          </div>
         </div>
       </div>
     </div>
