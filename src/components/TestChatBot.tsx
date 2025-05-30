@@ -5,13 +5,16 @@ import FileUpload from './FileUpload'
 import VoiceInput from './VoiceInput'
 
 export default function TestChatBot() {
-  const [message, setMessage] = useState('')
+  const [userTextInput, setUserTextInput] = useState('')
   const [response, setResponse] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [uploadedContent, setUploadedContent] = useState('')
 
+  const ANALYSIS_PROMPT = "\n\nGeef een uitgebreide analyse van deze tekst met de volgende aspecten:\n1. Hoofdthema's en kernboodschap\n2. Toon en stijl\n3. Structuur en opbouw\n4. Sterke punten\n5. Verbeterpunten\n6. Algemene beoordeling"
+  const MAX_MESSAGE_LENGTH = 4000
+
   const handleVoiceInput = (transcript: string) => {
-    setMessage(prev => prev + ' ' + transcript)
+    setUserTextInput(prev => prev + ' ' + transcript)
   }
 
   const handleFileUpload = async (file: File) => {
@@ -35,30 +38,46 @@ export default function TestChatBot() {
       }
 
       const data = await response.json()
-      setUploadedContent(data.content)
-      
       const fileInfo = `📎 ${data.filename} (${data.fileType})\n`
-      // Gebruik de volledige tekst voor analyse
-      setMessage(prev => prev + '\n\nAnalyseer de volgende tekst:\n\n' + fileInfo + data.content)
+      setUploadedContent(fileInfo + data.content)
     } catch (error) {
       console.error('File upload error:', error)
       alert('Fout bij uploaden: ' + (error instanceof Error ? error.message : 'Onbekende fout'))
     }
   }
 
+  const constructMessage = () => {
+    let baseMessage = userTextInput.trim()
+    
+    if (uploadedContent) {
+      baseMessage = baseMessage ? `${baseMessage}\n\nAnalyseer de volgende tekst:\n\n${uploadedContent}` : uploadedContent
+    }
+
+    const fullMessage = baseMessage + ANALYSIS_PROMPT
+    
+    if (fullMessage.length > MAX_MESSAGE_LENGTH) {
+      const availableSpace = MAX_MESSAGE_LENGTH - (ANALYSIS_PROMPT.length + baseMessage.length - uploadedContent.length)
+      const truncatedContent = uploadedContent.slice(0, availableSpace)
+      setResponse('Let op: De geüploade tekst was te lang en is ingekort voor analyse.')
+      return baseMessage.replace(uploadedContent, truncatedContent) + ANALYSIS_PROMPT
+    }
+
+    return fullMessage
+  }
+
   const sendMessage = async () => {
-    if (!message.trim()) return
+    if (!userTextInput.trim() && !uploadedContent) return
 
     setIsLoading(true)
     try {
+      const messageToSend = constructMessage()
+      
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          message: message + "\n\nGeef een uitgebreide analyse van deze tekst met de volgende aspecten:\n1. Hoofdthema's en kernboodschap\n2. Toon en stijl\n3. Structuur en opbouw\n4. Sterke punten\n5. Verbeterpunten\n6. Algemene beoordeling" 
-        }),
+        body: JSON.stringify({ message: messageToSend }),
       })
 
       if (!res.ok) {
@@ -88,8 +107,8 @@ export default function TestChatBot() {
       <div className="space-y-4">
         <div className="bg-white rounded-lg border border-purple-200 p-4">
           <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            value={userTextInput}
+            onChange={(e) => setUserTextInput(e.target.value)}
             placeholder="Voer een tekst in voor analyse, upload een document, of gebruik de microfoon..."
             className="w-full p-2 border border-gray-200 rounded resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
             rows={4}
@@ -104,7 +123,7 @@ export default function TestChatBot() {
             
             <button
               onClick={sendMessage}
-              disabled={isLoading || !message.trim()}
+              disabled={isLoading || (!userTextInput.trim() && !uploadedContent)}
               className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? 'Analyseren...' : 'Analyseer Tekst'}
