@@ -1,4 +1,5 @@
 import TestChatBot from '@/components/TestChatBot'
+import ChineseHistoryQuiz from '@/components/ChineseHistoryQuiz'
 
 export default function Home() {
   return (
@@ -21,6 +22,7 @@ export default function Home() {
           </p>
 
           <TestChatBot />
+          <ChineseHistoryQuiz />
         </div>
       </div>
     </div>
