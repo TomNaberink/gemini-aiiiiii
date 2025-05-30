@@ -38,11 +38,8 @@ export default function TestChatBot() {
       setUploadedContent(data.content)
       
       const fileInfo = `📎 ${data.filename} (${data.fileType})\n`
-      const contentPreview = data.content.length > 300 
-        ? data.content.substring(0, 300) + '...' 
-        : data.content
-      
-      setMessage(prev => prev + '\n\nAnalyseer de volgende tekst:\n\n' + fileInfo + contentPreview)
+      // Gebruik de volledige tekst voor analyse
+      setMessage(prev => prev + '\n\nAnalyseer de volgende tekst:\n\n' + fileInfo + data.content)
     } catch (error) {
       console.error('File upload error:', error)
       alert('Fout bij uploaden: ' + (error instanceof Error ? error.message : 'Onbekende fout'))
