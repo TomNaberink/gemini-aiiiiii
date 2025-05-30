@@ -10,7 +10,18 @@ export default function TestChatBot() {
   const [isLoading, setIsLoading] = useState(false)
   const [uploadedContent, setUploadedContent] = useState('')
 
-  const ANALYSIS_PROMPT = "\n\nGeef een uitgebreide analyse van deze tekst met de volgende aspecten:\n1. Hoofdthema's en kernboodschap\n2. Toon en stijl\n3. Structuur en opbouw\n4. Sterke punten\n5. Verbeterpunten\n6. Algemene beoordeling"
+  // Aangepaste prompt met betere opmaak
+  const ANALYSIS_PROMPT = `
+
+Geef een uitgebreide analyse van deze tekst met de volgende aspecten:
+
+1. Hoofdthema's en kernboodschap
+2. Toon en stijl
+3. Structuur en opbouw
+4. Sterke punten
+5. Verbeterpunten
+6. Algemene beoordeling`
+
   const MAX_MESSAGE_LENGTH = 4000
 
   const handleVoiceInput = (transcript: string) => {
@@ -86,7 +97,11 @@ export default function TestChatBot() {
       }
 
       const data = await res.json()
-      setResponse(data.response)
+      // Format the response to replace markdown-style formatting
+      const formattedResponse = data.response
+        .replace(/\*\*(.*?)\*\*/g, '$1')  // Remove ** formatting
+        .replace(/#{1,6}\s?/g, '')        // Remove heading markers
+      setResponse(formattedResponse)
     } catch (error) {
       console.error('Error:', error)
       setResponse('Error: ' + (error instanceof Error ? error.message : 'Onbekende fout'))
