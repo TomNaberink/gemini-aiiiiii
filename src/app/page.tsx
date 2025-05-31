@@ -10,6 +10,7 @@ type Character = {
   emoji: string
   description: string
   greeting: string
+  avatar: string
 }
 
 const characters: Character[] = [
@@ -18,35 +19,40 @@ const characters: Character[] = [
     name: 'Justin Bieber',
     emoji: '🎤',
     description: 'Pop superstar',
-    greeting: "Hey! I'm Justin Bieber! What's up? Let's chat! 🎵"
+    greeting: "Hey! I'm Justin Bieber! What's up? Let's chat! 🎵",
+    avatar: 'https://images.pexels.com/photos/1771383/pexels-photo-1771383.jpeg?auto=compress&cs=tinysrgb&w=150'
   },
   {
     id: 'taylor',
     name: 'Taylor Swift',
     emoji: '🎸',
     description: 'Singer-songwriter',
-    greeting: "Hi! Taylor Swift here! Ready to shake off some conversation? 💫"
+    greeting: "Hi! Taylor Swift here! Ready to shake off some conversation? 💫",
+    avatar: 'https://images.pexels.com/photos/1539936/pexels-photo-1539936.jpeg?auto=compress&cs=tinysrgb&w=150'
   },
   {
     id: 'elon',
     name: 'Elon Musk',
     emoji: '🚀',
     description: 'Tech entrepreneur',
-    greeting: "Hello! This is Elon. Let's talk about the future of technology! 🌟"
+    greeting: "Hello! This is Elon. Let's talk about the future of technology! 🌟",
+    avatar: 'https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=150'
   },
   {
     id: 'emma',
     name: 'Emma Watson',
     emoji: '📚',
     description: 'Actress & Activist',
-    greeting: "Hi there! Emma Watson speaking. Excited to discuss education, acting, and making a difference! ✨"
+    greeting: "Hi there! Emma Watson speaking. Excited to discuss education, acting, and making a difference! ✨",
+    avatar: 'https://images.pexels.com/photos/1898555/pexels-photo-1898555.jpeg?auto=compress&cs=tinysrgb&w=150'
   },
   {
     id: 'ronaldo',
     name: 'Cristiano Ronaldo',
     emoji: '⚽',
     description: 'Football legend',
-    greeting: "Olá! CR7 here! Let's talk about football, fitness, and achieving your goals! 🏆"
+    greeting: "Olá! CR7 here! Let's talk about football, fitness, and achieving your goals! 🏆",
+    avatar: 'https://images.pexels.com/photos/159516/soccer-football-player-match-159516.jpeg?auto=compress&cs=tinysrgb&w=150'
   }
 ]
 
@@ -163,11 +169,15 @@ export default function Home() {
               onClick={() => setShowCharacterSelect(!showCharacterSelect)}
               className="relative group"
             >
-              <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center hover:bg-purple-200 transition-colors border-2 border-purple-300 group-hover:border-purple-400">
-                <span className="text-2xl">{currentCharacter.emoji}</span>
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs">
-                  ↓
-                </div>
+              <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center hover:bg-purple-200 transition-colors border-2 border-purple-300 group-hover:border-purple-400 overflow-hidden">
+                <img 
+                  src={currentCharacter.avatar} 
+                  alt={currentCharacter.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs">
+                ↓
               </div>
               {showCharacterSelect && (
                 <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-purple-100 py-2 z-10">
@@ -180,9 +190,13 @@ export default function Home() {
                       onClick={() => handleCharacterChange(character)}
                       className="w-full px-4 py-3 text-left hover:bg-purple-50 flex items-center space-x-3 cursor-pointer"
                     >
-                      <span className="text-2xl w-10 h-10 flex items-center justify-center bg-purple-100 rounded-full">
-                        {character.emoji}
-                      </span>
+                      <div className="w-10 h-10 rounded-full overflow-hidden">
+                        <img 
+                          src={character.avatar} 
+                          alt={character.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                       <div>
                         <div className="font-medium text-gray-900">{character.name}</div>
                         <div className="text-sm text-gray-500">{character.description}</div>
@@ -209,29 +223,62 @@ export default function Home() {
 
       {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="max-w-4xl mx-auto space-y-4">
+        <div className="max-w-4xl mx-auto space-y-6">
           {messages.map((message, index) => (
             <div
               key={index}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex items-end space-x-2 ${message.role === 'user' ? 'flex-row-reverse space-x-reverse' : 'flex-row'}`}
             >
+              {/* Avatar */}
+              <div className="flex-shrink-0">
+                {message.role === 'user' ? (
+                  <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white text-sm">
+                    You
+                  </div>
+                ) : message.role === 'teacher' ? (
+                  <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white">
+                    👩‍🏫
+                  </div>
+                ) : (
+                  <div className="w-8 h-8 rounded-full overflow-hidden">
+                    <img 
+                      src={currentCharacter.avatar} 
+                      alt={currentCharacter.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Message Bubble */}
               <div
                 className={`max-w-[80%] rounded-2xl px-4 py-2 ${
                   message.role === 'user'
-                    ? 'bg-purple-600 text-white'
+                    ? 'bg-purple-600 text-white rounded-br-none'
                     : message.role === 'teacher'
-                    ? 'bg-green-50 border border-green-200 text-gray-800'
-                    : 'bg-white text-gray-800'
+                    ? 'bg-green-50 border border-green-200 text-gray-800 rounded-bl-none'
+                    : 'bg-white text-gray-800 rounded-bl-none'
                 }`}
               >
-                {message.role === 'teacher' && <div className="font-semibold mb-1">👩‍🏫 Teacher Feedback:</div>}
-                {message.content}
+                {message.role === 'teacher' && (
+                  <div className="font-semibold mb-1">Teacher Feedback:</div>
+                )}
+                <div className="whitespace-pre-wrap">{message.content}</div>
               </div>
             </div>
           ))}
+          
+          {/* Loading indicator */}
           {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-white rounded-2xl px-4 py-2 flex items-center space-x-2">
+            <div className="flex items-end space-x-2">
+              <div className="w-8 h-8 rounded-full overflow-hidden">
+                <img 
+                  src={currentCharacter.avatar} 
+                  alt={currentCharacter.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="bg-white rounded-2xl rounded-bl-none px-4 py-2 flex items-center space-x-2">
                 <div className="flex space-x-1">
                   <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
                   <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
