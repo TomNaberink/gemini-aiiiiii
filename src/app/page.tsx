@@ -4,16 +4,70 @@ import { useState } from 'react'
 import VoiceInput from '@/components/VoiceInput'
 import FileUpload from '@/components/FileUpload'
 
+type Character = {
+  id: string
+  name: string
+  emoji: string
+  description: string
+  greeting: string
+}
+
+const characters: Character[] = [
+  {
+    id: 'justin',
+    name: 'Justin Bieber',
+    emoji: '🎤',
+    description: 'Pop superstar',
+    greeting: "Hey! I'm Justin Bieber! What's up? Let's chat! 🎵"
+  },
+  {
+    id: 'taylor',
+    name: 'Taylor Swift',
+    emoji: '🎸',
+    description: 'Singer-songwriter',
+    greeting: "Hi! Taylor Swift here! Ready to shake off some conversation? 💫"
+  },
+  {
+    id: 'elon',
+    name: 'Elon Musk',
+    emoji: '🚀',
+    description: 'Tech entrepreneur',
+    greeting: "Hello! This is Elon. Let's talk about the future of technology! 🌟"
+  },
+  {
+    id: 'emma',
+    name: 'Emma Watson',
+    emoji: '📚',
+    description: 'Actress & Activist',
+    greeting: "Hi there! Emma Watson speaking. Excited to discuss education, acting, and making a difference! ✨"
+  },
+  {
+    id: 'ronaldo',
+    name: 'Cristiano Ronaldo',
+    emoji: '⚽',
+    description: 'Football legend',
+    greeting: "Olá! CR7 here! Let's talk about football, fitness, and achieving your goals! 🏆"
+  }
+]
+
 export default function Home() {
+  const [currentCharacter, setCurrentCharacter] = useState<Character>(characters[0])
+  const [showCharacterSelect, setShowCharacterSelect] = useState(false)
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant' | 'teacher', content: string }>>([
     { 
       role: 'assistant', 
-      content: "Hey! I'm Justin Bieber! What's up? Let's chat! 🎵" 
+      content: characters[0].greeting
     }
   ])
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showUpload, setShowUpload] = useState(false)
+
+  const handleCharacterChange = (character: Character) => {
+    setCurrentCharacter(character)
+    setMessages([{ role: 'assistant', content: character.greeting }])
+    setShowCharacterSelect(false)
+  }
 
   const handleSend = async () => {
     if (!inputMessage.trim()) return
@@ -21,7 +75,6 @@ export default function Home() {
     const userMessage = inputMessage
     setInputMessage('')
     
-    // Add user message to chat
     setMessages(prev => [...prev, { role: 'user', content: userMessage }])
     setIsLoading(true)
 
@@ -30,7 +83,8 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          message: `You are Justin Bieber. Respond to this message in your style: ${userMessage}` 
+          message: `You are ${currentCharacter.name}. Respond to this message in your style: ${userMessage}`,
+          character: currentCharacter.id
         }),
       })
 
@@ -42,7 +96,7 @@ export default function Home() {
       console.error('Error:', error)
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: "Sorry, I'm having trouble with my mic right now. Can we try again? 🎤" 
+        content: "Sorry, I'm having trouble right now. Can we try again?" 
       }])
     } finally {
       setIsLoading(false)
@@ -53,7 +107,6 @@ export default function Home() {
     setIsLoading(true)
     
     try {
-      // Get all user messages
       const userMessages = messages
         .filter(msg => msg.role === 'user')
         .map(msg => msg.content)
@@ -103,12 +156,34 @@ export default function Home() {
       {/* Chat Header */}
       <div className="bg-white shadow-sm p-4 flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
-            <span className="text-2xl">🎤</span>
-          </div>
+          <button 
+            onClick={() => setShowCharacterSelect(!showCharacterSelect)}
+            className="relative"
+          >
+            <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center hover:bg-purple-200 transition-colors">
+              <span className="text-2xl">{currentCharacter.emoji}</span>
+            </div>
+            {showCharacterSelect && (
+              <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
+                {characters.map(character => (
+                  <button
+                    key={character.id}
+                    onClick={() => handleCharacterChange(character)}
+                    className="w-full px-4 py-2 text-left hover:bg-purple-50 flex items-center space-x-3"
+                  >
+                    <span className="text-2xl">{character.emoji}</span>
+                    <div>
+                      <div className="font-medium">{character.name}</div>
+                      <div className="text-sm text-gray-500">{character.description}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </button>
           <div>
-            <h1 className="text-xl font-bold text-purple-900">Chat with Justin Bieber</h1>
-            <p className="text-sm text-purple-600">I'll be your virtual Justin today! 🎵</p>
+            <h1 className="text-xl font-bold text-purple-900">Chat with {currentCharacter.name}</h1>
+            <p className="text-sm text-purple-600">Practice your English in a fun way! {currentCharacter.emoji}</p>
           </div>
         </div>
         <button
@@ -177,7 +252,7 @@ export default function Home() {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Message Justin..."
+              placeholder={`Message ${currentCharacter.name}...`}
               className="w-full p-3 bg-transparent border-0 focus:ring-0 resize-none"
               rows={1}
             />
