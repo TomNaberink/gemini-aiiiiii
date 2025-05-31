@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { message } = await request.json()
+    const { message, isTeacher } = await request.json()
 
     if (!message) {
       return NextResponse.json(
@@ -30,7 +30,9 @@ export async function POST(request: NextRequest) {
 
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' })
 
-    const prompt = `You are Justin Bieber. Always respond in English, using your characteristic style, slang, and personality.
+    const prompt = isTeacher
+      ? message // Teacher prompt is already formatted in the request
+      : `You are Justin Bieber. Always respond in English, using your characteristic style, slang, and personality.
 Include references to your music, life experiences, and career when relevant. Keep responses concise and authentic.
 Current message: ${message}`
 

@@ -5,7 +5,7 @@ import VoiceInput from '@/components/VoiceInput'
 import FileUpload from '@/components/FileUpload'
 
 export default function Home() {
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant', content: string }>>([
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant' | 'teacher', content: string }>>([
     { 
       role: 'assistant', 
       content: "Hey! I'm Justin Bieber! What's up? Let's chat! 🎵" 
@@ -49,6 +49,40 @@ export default function Home() {
     }
   }
 
+  const handleTeacherFeedback = async () => {
+    setIsLoading(true)
+    
+    try {
+      // Get all user messages
+      const userMessages = messages
+        .filter(msg => msg.role === 'user')
+        .map(msg => msg.content)
+        .join('\n')
+
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          message: `You are an English language teacher. Review the following English conversation from a student. Provide constructive feedback on their English language usage, including grammar, vocabulary, and suggestions for improvement. Here are their messages:\n\n${userMessages}`,
+          isTeacher: true
+        }),
+      })
+
+      if (!res.ok) throw new Error('Failed to get teacher feedback')
+      
+      const data = await res.json()
+      setMessages(prev => [...prev, { role: 'teacher', content: data.response }])
+    } catch (error) {
+      console.error('Error:', error)
+      setMessages(prev => [...prev, { 
+        role: 'teacher', 
+        content: "Sorry, I couldn't provide feedback at this moment. Please try again later." 
+      }])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleVoiceInput = (transcript: string) => {
     setInputMessage(prev => prev + ' ' + transcript)
   }
@@ -67,14 +101,23 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 flex flex-col">
       {/* Chat Header */}
-      <div className="bg-white shadow-sm p-4 flex items-center space-x-4">
-        <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
-          <span className="text-2xl">🎤</span>
+      <div className="bg-white shadow-sm p-4 flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+            <span className="text-2xl">🎤</span>
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-purple-900">Chat with Justin Bieber</h1>
+            <p className="text-sm text-purple-600">I'll be your virtual Justin today! 🎵</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-purple-900">Chat with Justin Bieber</h1>
-          <p className="text-sm text-purple-600">I'll be your virtual Justin today! 🎵</p>
-        </div>
+        <button
+          onClick={handleTeacherFeedback}
+          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+        >
+          <span>👩‍🏫</span>
+          <span>Teacher Feedback</span>
+        </button>
       </div>
 
       {/* Chat Messages */}
@@ -88,9 +131,12 @@ export default function Home() {
               className={`max-w-[80%] rounded-2xl px-4 py-2 ${
                 message.role === 'user'
                   ? 'bg-purple-600 text-white'
+                  : message.role === 'teacher'
+                  ? 'bg-green-50 border border-green-200 text-gray-800'
                   : 'bg-white text-gray-800'
               }`}
             >
+              {message.role === 'teacher' && <div className="font-semibold mb-1">👩‍🏫 Teacher Feedback:</div>}
               {message.content}
             </div>
           </div>
@@ -103,7 +149,7 @@ export default function Home() {
                 <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
                 <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
               </div>
-              <span className="text-sm text-gray-500">Justin is typing...</span>
+              <span className="text-sm text-gray-500">Typing...</span>
             </div>
           </div>
         )}
