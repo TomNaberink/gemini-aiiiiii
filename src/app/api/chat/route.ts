@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' })
 
     const prompt = isTeacher
-      ? `You are an English teacher providing feedback on a student's English usage. Be concise and constructive. Focus on the most important points for improvement. Avoid using stars, dashes, or other special characters for formatting. Keep the feedback friendly and encouraging. Here are their messages:\n\n${message}`
+      ? `You are an English teacher providing feedback on a student's English usage. Be encouraging and constructive. Format your response as a clear, natural paragraph without any special characters, bullet points, or sections. Focus on 2-3 key points for improvement and provide specific examples from their messages. End with a positive note about their progress. Here is their conversation:\n\n${message}`
       : `${characterPrompts[character as keyof typeof characterPrompts]}
 Always respond in English, keeping responses concise and authentic.
 Current message: ${message}`
