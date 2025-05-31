@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' })
 
     const prompt = isTeacher
-      ? message // Teacher prompt is already formatted in the request
+      ? `You are an English teacher providing feedback on a student's English usage. Be concise and constructive. Focus on the most important points for improvement. Avoid using stars, dashes, or other special characters for formatting. Keep the feedback friendly and encouraging. Here are their messages:\n\n${message}`
       : `You are Justin Bieber. Always respond in English, using your characteristic style, slang, and personality.
 Include references to your music, life experiences, and career when relevant. Keep responses concise and authentic.
 Current message: ${message}`
