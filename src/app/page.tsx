@@ -173,10 +173,10 @@ export default function Home() {
                     Choose your chat partner:
                   </div>
                   {characters.map(character => (
-                    <button
+                    <div
                       key={character.id}
                       onClick={() => handleCharacterChange(character)}
-                      className="w-full px-4 py-3 text-left hover:bg-purple-50 flex items-center space-x-3"
+                      className="w-full px-4 py-3 text-left hover:bg-purple-50 flex items-center space-x-3 cursor-pointer"
                     >
                       <span className="text-2xl w-10 h-10 flex items-center justify-center bg-purple-100 rounded-full">
                         {character.emoji}
@@ -185,7 +185,7 @@ export default function Home() {
                         <div className="font-medium text-gray-900">{character.name}</div>
                         <div className="text-sm text-gray-500">{character.description}</div>
                       </div>
-                    </button>
+                    </div>
                   ))}
                 </div>
               )}
