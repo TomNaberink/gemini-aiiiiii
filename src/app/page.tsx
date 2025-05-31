@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useSearchParams } from 'next/navigation'
 import VoiceInput from '@/components/VoiceInput'
 import FileUpload from '@/components/FileUpload'
 
@@ -58,9 +57,6 @@ const characters: Character[] = [
 ]
 
 export default function Home() {
-  // Initialize useSearchParams to fix Next.js workStore error
-  const searchParams = useSearchParams()
-  
   const [currentCharacter, setCurrentCharacter] = useState<Character>(characters[0])
   const [showCharacterSelect, setShowCharacterSelect] = useState(false)
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant' | 'teacher', content: string }>>([
