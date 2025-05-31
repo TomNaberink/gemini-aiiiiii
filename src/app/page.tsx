@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import VoiceInput from '@/components/VoiceInput'
 import FileUpload from '@/components/FileUpload'
 
@@ -57,18 +57,23 @@ const characters: Character[] = [
 ]
 
 export default function Home() {
+  const [mounted, setMounted] = useState(false)
   const [currentCharacter, setCurrentCharacter] = useState<Character>(characters[0])
   const [showCharacterSelect, setShowCharacterSelect] = useState(false)
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant' | 'teacher', content: string }>>([
-    { 
-      role: 'assistant', 
-      content: characters[0].greeting
-    }
-  ])
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant' | 'teacher', content: string }>>([])
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showUpload, setShowUpload] = useState(false)
   const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard'>('normal')
+
+  useEffect(() => {
+    setMounted(true)
+    setMessages([{ role: 'assistant', content: characters[0].greeting }])
+  }, [])
+
+  if (!mounted) {
+    return null
+  }
 
   const handleCharacterChange = (character: Character) => {
     setCurrentCharacter(character)
