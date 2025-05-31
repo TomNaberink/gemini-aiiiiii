@@ -154,86 +154,100 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 flex flex-col">
       {/* Chat Header */}
-      <div className="bg-white shadow-sm p-4 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <button 
-            onClick={() => setShowCharacterSelect(!showCharacterSelect)}
-            className="relative"
-          >
-            <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center hover:bg-purple-200 transition-colors">
-              <span className="text-2xl">{currentCharacter.emoji}</span>
-            </div>
-            {showCharacterSelect && (
-              <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
-                {characters.map(character => (
-                  <button
-                    key={character.id}
-                    onClick={() => handleCharacterChange(character)}
-                    className="w-full px-4 py-2 text-left hover:bg-purple-50 flex items-center space-x-3"
-                  >
-                    <span className="text-2xl">{character.emoji}</span>
-                    <div>
-                      <div className="font-medium">{character.name}</div>
-                      <div className="text-sm text-gray-500">{character.description}</div>
-                    </div>
-                  </button>
-                ))}
+      <div className="bg-white shadow-sm p-4">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={() => setShowCharacterSelect(!showCharacterSelect)}
+              className="relative group"
+            >
+              <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center hover:bg-purple-200 transition-colors border-2 border-purple-300 group-hover:border-purple-400">
+                <span className="text-2xl">{currentCharacter.emoji}</span>
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs">
+                  ↓
+                </div>
               </div>
-            )}
-          </button>
-          <div>
-            <h1 className="text-xl font-bold text-purple-900">Chat with {currentCharacter.name}</h1>
-            <p className="text-sm text-purple-600">Practice your English in a fun way! {currentCharacter.emoji}</p>
+              {showCharacterSelect && (
+                <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-purple-100 py-2 z-10">
+                  <div className="px-4 py-2 text-sm text-purple-600 border-b border-purple-100">
+                    Choose your chat partner:
+                  </div>
+                  {characters.map(character => (
+                    <button
+                      key={character.id}
+                      onClick={() => handleCharacterChange(character)}
+                      className="w-full px-4 py-3 text-left hover:bg-purple-50 flex items-center space-x-3"
+                    >
+                      <span className="text-2xl w-10 h-10 flex items-center justify-center bg-purple-100 rounded-full">
+                        {character.emoji}
+                      </span>
+                      <div>
+                        <div className="font-medium text-gray-900">{character.name}</div>
+                        <div className="text-sm text-gray-500">{character.description}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </button>
+            <div>
+              <h1 className="text-xl font-bold text-purple-900">Chat with {currentCharacter.name}</h1>
+              <p className="text-sm text-purple-600">Practice your English in a fun way! {currentCharacter.emoji}</p>
+            </div>
           </div>
+          <button
+            onClick={handleTeacherFeedback}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+          >
+            <span>👩‍🏫</span>
+            <span>Teacher Feedback</span>
+          </button>
         </div>
-        <button
-          onClick={handleTeacherFeedback}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
-        >
-          <span>👩‍🏫</span>
-          <span>Teacher Feedback</span>
-        </button>
       </div>
 
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          {messages.map((message, index) => (
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                message.role === 'user'
-                  ? 'bg-purple-600 text-white'
-                  : message.role === 'teacher'
-                  ? 'bg-green-50 border border-green-200 text-gray-800'
-                  : 'bg-white text-gray-800'
-              }`}
+              key={index}
+              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              {message.role === 'teacher' && <div className="font-semibold mb-1">👩‍🏫 Teacher Feedback:</div>}
-              {message.content}
-            </div>
-          </div>
-        ))}
-        {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-white rounded-2xl px-4 py-2 flex items-center space-x-2">
-              <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+              <div
+                className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                  message.role === 'user'
+                    ? 'bg-purple-600 text-white'
+                    : message.role === 'teacher'
+                    ? 'bg-green-50 border border-green-200 text-gray-800'
+                    : 'bg-white text-gray-800'
+                }`}
+              >
+                {message.role === 'teacher' && <div className="font-semibold mb-1">👩‍🏫 Teacher Feedback:</div>}
+                {message.content}
               </div>
-              <span className="text-sm text-gray-500">Typing...</span>
             </div>
-          </div>
-        )}
+          ))}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-white rounded-2xl px-4 py-2 flex items-center space-x-2">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                </div>
+                <span className="text-sm text-gray-500">Typing...</span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* File Upload Area */}
       {showUpload && (
         <div className="p-4 bg-white border-t border-gray-200">
-          <FileUpload onFileUpload={handleFileUpload} />
+          <div className="max-w-4xl mx-auto">
+            <FileUpload onFileUpload={handleFileUpload} />
+          </div>
         </div>
       )}
 
