@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx'
+import { saveAs } from 'file-saver'
 
 type QuestionType = 'multiple-choice' | 'true-false' | 'open'
 type EducationLevel = 'high-school' | 'bachelor' | 'university'
@@ -28,6 +30,51 @@ export default function TestGenerator() {
   })
   const [isGenerating, setIsGenerating] = useState(false)
   const [questions, setQuestions] = useState<string>('')
+
+  const handleDownload = async () => {
+    // Create a new document
+    const doc = new Document({
+      sections: [{
+        properties: {},
+        children: [
+          new Paragraph({
+            text: config.subject,
+            heading: HeadingLevel.HEADING_1,
+          }),
+          ...questions.split('---').flatMap(question => {
+            const paragraphs: Paragraph[] = []
+            
+            // Split the question into lines and create paragraphs
+            question.split('\n').forEach(line => {
+              if (line.trim()) {
+                const paragraph = new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: line.replace(/\*\*/g, '').replace(/\*/g, ''),
+                      bold: line.includes('**'),
+                      italics: line.includes('*') && !line.includes('**'),
+                    }),
+                  ],
+                })
+                paragraphs.push(paragraph)
+              }
+            })
+            
+            // Add spacing between questions
+            paragraphs.push(new Paragraph({}))
+            
+            return paragraphs
+          }),
+        ],
+      }],
+    })
+
+    // Generate the document
+    const blob = await Packer.toBlob(doc)
+    
+    // Download the file
+    saveAs(blob, `${config.subject.toLowerCase().replace(/\s+/g, '-')}-toets.docx`)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -222,7 +269,16 @@ export default function TestGenerator() {
       {/* Generated Questions */}
       {questions && (
         <div className="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
-          <h3 className="text-xl font-bold text-purple-800 mb-6">Gegenereerde vragen:</h3>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-bold text-purple-800">Gegenereerde vragen:</h3>
+            <button
+              onClick={handleDownload}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors flex items-center space-x-2"
+            >
+              <span>📥</span>
+              <span>Download .docx</span>
+            </button>
+          </div>
           <div className="prose max-w-none">
             {formatQuestions(questions)}
           </div>
