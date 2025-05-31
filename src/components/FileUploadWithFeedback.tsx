@@ -1,6 +1,4 @@
-'use client'
-
-import { useState } from 'react'
+import React, { useState } from 'react'
 
 interface FeedbackScores {
   content: number
@@ -10,14 +8,20 @@ interface FeedbackScores {
   originality: number
 }
 
+interface DetailedFeedback {
+  top: string
+  tip: string
+  examples?: string[]
+}
+
 interface FeedbackResult {
   scores: FeedbackScores
   feedback: {
-    content: string[]
-    argumentation: string[]
-    structure: string[]
-    language: string[]
-    originality: string[]
+    content: DetailedFeedback
+    argumentation: DetailedFeedback
+    structure: DetailedFeedback
+    language: DetailedFeedback
+    originality: DetailedFeedback
   }
   totalScore: number
   overallFeedback: string
@@ -47,237 +51,155 @@ export default function FileUploadWithFeedback() {
     const avgSentenceLength = words.length / sentences.length
     const avgParagraphLength = words.length / paragraphs.length
 
+    // Find example sentences
+    const getExampleSentence = (pattern: string): string | undefined => {
+      return sentences.find(s => s.toLowerCase().includes(pattern.toLowerCase()))?.trim()
+    }
+
     // Content Analysis
-    const contentFeedback = []
     let contentScore = 0
-
-    // Word count analysis
-    if (words.length < 300) {
-      contentFeedback.push("• De tekst is te kort voor een diepgaande analyse. Voeg meer inhoud toe.")
-      contentScore += 1
-    } else if (words.length < 500) {
-      contentFeedback.push("• De lengte is voldoende maar kan baat hebben bij meer uitwerking.")
-      contentScore += 2
-    } else if (words.length < 800) {
-      contentFeedback.push("• Goede tekstlengte met ruimte voor diepgang.")
-      contentScore += 3
-    } else {
-      contentFeedback.push("• Uitstekende tekstlengte die ruimte biedt voor grondige analyse.")
-      contentScore += 4
+    const contentFeedback: DetailedFeedback = {
+      top: '',
+      tip: '',
+      examples: []
     }
 
-    // Sentence complexity
-    if (avgSentenceLength < 10) {
-      contentFeedback.push("• Zinnen zijn aan de korte kant. Overweeg meer detail per zin.")
-    } else if (avgSentenceLength > 25) {
-      contentFeedback.push("• Sommige zinnen zijn erg lang. Overweeg ze op te splitsen voor betere leesbaarheid.")
-    } else {
-      contentFeedback.push("• Goede gemiddelde zinslengte voor academisch schrijven.")
-      contentScore += 2
-    }
-
-    // Topic coverage
+    // Analyze depth and coverage
     const keywordDensity = new Set(words.map(w => w.toLowerCase())).size / words.length
     if (keywordDensity > 0.6) {
-      contentFeedback.push("• Gevarieerd woordgebruik duidt op goede dekking van het onderwerp.")
-      contentScore += 2
+      contentScore += 4
+      contentFeedback.top = "Je tekst laat een indrukwekkende diepgang zien in de behandeling van het onderwerp. Je gebruikt een rijk vocabulaire en weet complexe concepten helder uit te leggen."
+    } else {
+      contentFeedback.tip = "Je zou je analyse kunnen verdiepen door meer specifieke voorbeelden en details toe te voegen. Probeer elk hoofdpunt te ondersteunen met concrete voorbeelden."
+    }
+
+    // Find good examples
+    const detailedSentence = sentences.find(s => s.split(/\s+/).length > 15)
+    if (detailedSentence) {
+      contentFeedback.examples?.push(`Goede detaillering: "${detailedSentence.trim()}"`)
     }
 
     // Argumentation Analysis
-    const argumentFeedback = []
     let argumentationScore = 0
-
-    // Transition words analysis
-    const argumentMarkers = {
-      reasoning: ['omdat', 'dus', 'daarom', 'aangezien', 'vandaar'],
-      contrast: ['echter', 'maar', 'daarentegen', 'hoewel', 'ondanks'],
-      addition: ['bovendien', 'daarnaast', 'tevens', 'ook', 'verder'],
-      example: ['bijvoorbeeld', 'zoals', 'ter illustratie', 'denk aan'],
-      conclusion: ['concluderend', 'samenvattend', 'kortom', 'tot slot']
+    const argumentationFeedback: DetailedFeedback = {
+      top: '',
+      tip: '',
+      examples: []
     }
 
-    let totalMarkers = 0
-    let markerTypes = 0
+    // Analyze argument structure
+    const argumentMarkers = ['omdat', 'dus', 'daarom', 'echter', 'bovendien']
+    const foundMarkers = argumentMarkers.filter(marker => 
+      content.toLowerCase().includes(marker)
+    )
 
-    for (const [type, markers] of Object.entries(argumentMarkers)) {
-      const count = markers.reduce((sum, marker) => 
-        sum + content.toLowerCase().split(marker).length - 1, 0)
-      totalMarkers += count
-      if (count > 0) markerTypes++
+    if (foundMarkers.length > 3) {
+      argumentationScore += 4
+      argumentationFeedback.top = "Je argumentatie is sterk en logisch opgebouwd. Je maakt effectief gebruik van verbindingswoorden om je redenering te verduidelijken."
       
-      if (count === 0) {
-        argumentFeedback.push(`• Gebruik meer ${type} verbindingswoorden (${markers.join(', ')}).`)
+      // Add example
+      const exampleSentence = getExampleSentence(foundMarkers[0])
+      if (exampleSentence) {
+        argumentationFeedback.examples?.push(`Sterk argument: "${exampleSentence}"`)
       }
-    }
-
-    // Score based on marker variety and frequency
-    argumentationScore = Math.min(8, Math.floor((markerTypes * 1.2 + totalMarkers * 0.4)))
-    
-    if (totalMarkers < 5) {
-      argumentFeedback.push("• Gebruik meer verbindingswoorden om je argumenten te versterken.")
-    } else if (totalMarkers > 15) {
-      argumentFeedback.push("• Goed gebruik van verbindingswoorden. Let op dat het niet geforceerd wordt.")
+    } else {
+      argumentationFeedback.tip = "Je kunt je argumentatie versterken door meer gebruik te maken van verbindingswoorden. Probeer je redeneringen explicieter te maken door woorden als 'omdat', 'daarom' en 'echter' te gebruiken."
     }
 
     // Structure Analysis
-    const structureFeedback = []
     let structureScore = 0
-
-    // Paragraph analysis
-    if (paragraphs.length < 3) {
-      structureFeedback.push("• Te weinig paragrafen. Deel je tekst op in meer logische secties.")
-      structureScore += 1
-    } else if (paragraphs.length < 5) {
-      structureFeedback.push("• Basis structuur aanwezig. Overweeg meer onderverdeling voor betere flow.")
-      structureScore += 2
-    } else {
-      structureFeedback.push("• Goede verdeling in paragrafen.")
-      structureScore += 3
+    const structureFeedback: DetailedFeedback = {
+      top: '',
+      tip: '',
+      examples: []
     }
 
-    // Paragraph length consistency
-    const paragraphLengths = paragraphs.map(p => p.split(/\s+/).length)
-    const paragraphLengthVariance = Math.max(...paragraphLengths) / Math.min(...paragraphLengths)
-    
-    if (paragraphLengthVariance > 4) {
-      structureFeedback.push("• Grote variatie in paragraaflengte. Streef naar meer consistentie.")
+    // Analyze paragraph structure
+    if (paragraphs.length >= 5) {
+      structureScore += 4
+      structureFeedback.top = "Je tekst heeft een heldere, logische structuur met goed gebalanceerde paragrafen. De opbouw van je argumenten is overzichtelijk en makkelijk te volgen."
     } else {
-      structureFeedback.push("• Goede consistentie in paragraaflengte.")
-      structureScore += 2
-    }
-
-    // Introduction and conclusion check
-    const hasIntro = paragraphs[0].length > 50
-    const hasConclusion = paragraphs[paragraphs.length - 1].length > 50
-    
-    if (hasIntro && hasConclusion) {
-      structureFeedback.push("• Duidelijke inleiding en conclusie aanwezig.")
-      structureScore += 3
-    } else {
-      structureFeedback.push("• Versterk je inleiding en/of conclusie.")
+      structureFeedback.tip = "Je zou je tekst kunnen versterken door deze op te delen in meer paragrafen. Begin elke nieuwe paragraaf met een duidelijke hoofdgedachte en werk deze vervolgens uit."
     }
 
     // Language Analysis
-    const languageFeedback = []
     let languageScore = 0
-
-    // Complex words analysis
-    const complexWords = words.filter(w => w.length > 10)
-    const complexityRatio = complexWords.length / words.length
-    
-    if (complexityRatio > 0.2) {
-      languageFeedback.push("• Veel complexe woorden. Overweeg vereenvoudiging waar mogelijk.")
-      languageScore += 2
-    } else if (complexityRatio < 0.05) {
-      languageFeedback.push("• Woordgebruik is mogelijk te simpel voor academisch werk.")
-      languageScore += 1
-    } else {
-      languageFeedback.push("• Goed evenwicht in woordcomplexiteit.")
-      languageScore += 3
+    const languageFeedback: DetailedFeedback = {
+      top: '',
+      tip: '',
+      examples: []
     }
 
-    // Sentence variety
-    const sentenceLengths = sentences.map(s => s.split(/\s+/).length)
-    const sentenceLengthVariance = Math.max(...sentenceLengths) / Math.min(...sentenceLengths)
-    
-    if (sentenceLengthVariance > 3) {
-      languageFeedback.push("• Goede variatie in zinslengte.")
-      languageScore += 3
-    } else {
-      languageFeedback.push("• Meer variatie in zinslengte kan de tekst levendiger maken.")
-    }
+    // Analyze language variety
+    const uniqueWords = new Set(words.map(w => w.toLowerCase())).size
+    const vocabularyRatio = uniqueWords / words.length
 
-    // Passive voice check (basic)
-    const passiveIndicators = ['wordt', 'worden', 'werd', 'werden'].map(word =>
-      content.toLowerCase().split(word).length - 1
-    ).reduce((a, b) => a + b, 0)
-    
-    if (passiveIndicators > sentences.length * 0.3) {
-      languageFeedback.push("• Veel gebruik van passieve vorm. Overweeg actiever taalgebruik.")
+    if (vocabularyRatio > 0.6) {
+      languageScore += 4
+      languageFeedback.top = "Je taalgebruik is rijk en gevarieerd. Je weet complexe ideeën helder over te brengen zonder in herhaling te vallen."
+      
+      // Find sophisticated sentence
+      const longSentence = sentences.find(s => s.split(/\s+/).length > 20)
+      if (longSentence) {
+        languageFeedback.examples?.push(`Goed geformuleerde zin: "${longSentence.trim()}"`)
+      }
     } else {
-      languageFeedback.push("• Goed evenwicht tussen actief en passief taalgebruik.")
-      languageScore += 2
+      languageFeedback.tip = "Probeer je woordkeuze te variëren. Kijk of je sommige woorden kunt vervangen door synoniemen om herhaling te voorkomen."
     }
 
     // Originality Analysis
-    const originalityFeedback = []
     let originalityScore = 0
-
-    // Common phrases check
-    const commonPhrases = [
-      'in conclusie',
-      'met andere woorden',
-      'zoals eerder genoemd',
-      'al met al',
-      'het is duidelijk dat'
-    ]
-    
-    const commonPhraseCount = commonPhrases.reduce((count, phrase) => 
-      count + content.toLowerCase().split(phrase).length - 1, 0)
-    
-    if (commonPhraseCount > 5) {
-      originalityFeedback.push("• Vermijd clichématige uitdrukkingen.")
-      originalityScore += 1
-    } else if (commonPhraseCount > 2) {
-      originalityFeedback.push("• Beperkt gebruik van standaardfrases.")
-      originalityScore += 2
-    } else {
-      originalityFeedback.push("• Goed gebruik van originele formuleringen.")
-      originalityScore += 3
+    const originalityFeedback: DetailedFeedback = {
+      top: '',
+      tip: '',
+      examples: []
     }
 
-    // Unique vocabulary analysis
-    const uniqueWords = new Set(words.map(w => w.toLowerCase())).size
-    const vocabularyRatio = uniqueWords / words.length
-    
-    if (vocabularyRatio > 0.6) {
-      originalityFeedback.push("• Uitstekende variatie in woordkeuze.")
-      originalityScore += 3
-    } else if (vocabularyRatio > 0.4) {
-      originalityFeedback.push("• Goede variatie in woordgebruik.")
-      originalityScore += 2
-    } else {
-      originalityFeedback.push("• Meer variatie in woordkeuze kan de tekst versterken.")
-    }
+    // Analyze unique perspectives
+    const personalPronouns = ['ik', 'mijn', 'wij', 'onze'].some(pronoun => 
+      content.toLowerCase().includes(pronoun)
+    )
 
-    // Personal voice check
-    const personalPronouns = ['ik', 'mijn', 'wij', 'onze'].map(word =>
-      content.toLowerCase().split(word).length - 1
-    ).reduce((a, b) => a + b, 0)
-    
-    if (personalPronouns > 0) {
-      originalityFeedback.push("• Persoonlijke stem aanwezig in de tekst.")
-      originalityScore += 2
+    if (personalPronouns) {
+      originalityScore += 4
+      originalityFeedback.top = "Je schrijfstijl is persoonlijk en authentiek. Je durft je eigen stem te laten horen en brengt originele perspectieven in."
+      
+      // Find personal perspective
+      const personalSentence = sentences.find(s => 
+        ['ik', 'mijn', 'wij', 'onze'].some(p => s.toLowerCase().includes(p))
+      )
+      if (personalSentence) {
+        originalityFeedback.examples?.push(`Persoonlijk perspectief: "${personalSentence.trim()}"`)
+      }
+    } else {
+      originalityFeedback.tip = "Durf meer je eigen stem te laten horen. Deel je persoonlijke inzichten en ervaringen waar relevant, zonder de academische toon te verliezen."
     }
 
     // Calculate final scores
     const scores = {
-      content: Math.min(8, contentScore),
-      argumentation: Math.min(8, argumentationScore),
-      structure: Math.min(8, structureScore),
-      language: Math.min(8, languageScore),
-      originality: Math.min(8, originalityScore)
+      content: Math.min(8, contentScore + 4), // Base score + analysis score
+      argumentation: Math.min(8, argumentationScore + 4),
+      structure: Math.min(8, structureScore + 4),
+      language: Math.min(8, languageScore + 4),
+      originality: Math.min(8, originalityScore + 4)
     }
 
     const totalScore = Object.values(scores).reduce((a, b) => a + b, 0) / 5
 
     // Generate overall feedback
-    let overallFeedback = ""
-    if (totalScore <= 2) {
-      overallFeedback = "Je document heeft nog veel ruimte voor verbetering. Focus op het uitbreiden van je argumenten, het verbeteren van de structuur, en het toevoegen van meer diepgang in je analyse."
-    } else if (totalScore <= 4) {
-      overallFeedback = "Je document toont basiskennis maar kan baat hebben bij meer diepgang, sterkere argumentatie en een duidelijkere structuur. Werk aan de samenhang tussen paragrafen en onderbouw je stellingen beter."
-    } else if (totalScore <= 6) {
-      overallFeedback = "Je document is over het algemeen goed geschreven met duidelijke argumenten en een logische structuur. Voor verdere verbetering kun je focussen op meer gevarieerd taalgebruik en het versterken van je eigen stem in de tekst."
-    } else {
-      overallFeedback = "Uitstekend werk! Je document toont een hoog niveau van begrip, is zeer goed gestructureerd en bevat overtuigende argumentatie. De tekst is origineel en boeiend geschreven met een goede balans tussen academisch en toegankelijk taalgebruik."
-    }
+    const overallFeedback = `Je tekst toont ${totalScore > 6 ? 'uitstekend' : totalScore > 4 ? 'goed' : 'voldoende'} begrip van het onderwerp. ${
+      contentFeedback.top || contentFeedback.tip
+    } ${
+      argumentationFeedback.top || argumentationFeedback.tip
+    } ${
+      structureFeedback.top || structureFeedback.tip
+    }`
 
     return {
       scores,
       feedback: {
         content: contentFeedback,
-        argumentation: argumentFeedback,
+        argumentation: argumentationFeedback,
         structure: structureFeedback,
         language: languageFeedback,
         originality: originalityFeedback
@@ -290,9 +212,9 @@ export default function FileUploadWithFeedback() {
         paragraphCount: paragraphs.length,
         avgSentenceLength,
         avgParagraphLength,
-        complexWordPercentage: complexityRatio * 100,
-        argumentMarkerCount: totalMarkers,
-        transitionWordCount: markerTypes
+        complexWordPercentage: (words.filter(w => w.length > 10).length / words.length) * 100,
+        argumentMarkerCount: foundMarkers.length,
+        transitionWordCount: foundMarkers.length
       }
     }
   }
@@ -342,20 +264,6 @@ export default function FileUploadWithFeedback() {
     if (files.length > 0) {
       handleFileSelect(files[0])
     }
-  }
-
-  const getScoreColor = (score: number): string => {
-    if (score <= 2) return 'text-red-600'
-    if (score <= 4) return 'text-orange-600'
-    if (score <= 6) return 'text-green-600'
-    return 'text-emerald-600'
-  }
-
-  const getScoreLabel = (score: number): string => {
-    if (score <= 2) return 'Onvoldoende'
-    if (score <= 4) return 'Voldoende'
-    if (score <= 6) return 'Goed'
-    return 'Uitstekend'
   }
 
   return (
@@ -458,38 +366,61 @@ export default function FileUploadWithFeedback() {
               </div>
               <div className="bg-gray-50 p-3 rounded-lg">
                 <div className="text-sm text-gray-500">Gem. Zinslengte</div>
-                <div className="text-lg font-semibold">{feedback.metrics.avgSentenceLength.toFixed(1)}</div>
+                <div className="text-lg font-semibold">
+                  {feedback.metrics.avgSentenceLength.toFixed(1)}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Detailed Scores */}
+          {/* Detailed Feedback with TOP/TIP */}
           <div className="p-6 space-y-6">
             <h3 className="text-lg font-semibold text-gray-800">
               Gedetailleerde Feedback
             </h3>
             
-            {Object.entries(feedback.scores).map(([category, score]) => (
+            {Object.entries(feedback.feedback).map(([category, feedbackItem]) => (
               <div key={category} className="border rounded-lg p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <div>
-                    <span className="font-medium text-gray-700 capitalize">
-                      {category}
-                    </span>
-                    <span className={`ml-2 text-sm ${getScoreColor(score)}`}>
-                      ({getScoreLabel(score)})
-                    </span>
-                  </div>
-                  <span className={`font-semibold ${getScoreColor(score)}`}>
-                    {score} / 8
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="font-medium text-gray-700 capitalize">
+                    {category}
+                  </h4>
+                  <span className={`font-semibold ${
+                    feedback.scores[category as keyof typeof feedback.scores] > 6
+                      ? 'text-emerald-600'
+                      : feedback.scores[category as keyof typeof feedback.scores] > 4
+                      ? 'text-green-600'
+                      : 'text-orange-600'
+                  }`}>
+                    {feedback.scores[category as keyof typeof feedback.scores]} / 8
                   </span>
                 </div>
-                <div className="mt-3 space-y-1">
-                  {feedback.feedback[category as keyof typeof feedback.feedback].map((point, index) => (
-                    <p key={index} className="text-sm text-gray-600">
-                      {point}
-                    </p>
-                  ))}
+
+                <div className="space-y-4">
+                  {feedbackItem.top && (
+                    <div className="bg-green-50 p-3 rounded-lg">
+                      <div className="font-medium text-green-800 mb-1">TOP</div>
+                      <p className="text-green-700">{feedbackItem.top}</p>
+                    </div>
+                  )}
+
+                  {feedbackItem.tip && (
+                    <div className="bg-orange-50 p-3 rounded-lg">
+                      <div className="font-medium text-orange-800 mb-1">TIP</div>
+                      <p className="text-orange-700">{feedbackItem.tip}</p>
+                    </div>
+                  )}
+
+                  {feedbackItem.examples && feedbackItem.examples.length > 0 && (
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <div className="font-medium text-gray-800 mb-1">Voorbeelden</div>
+                      {feedbackItem.examples.map((example, index) => (
+                        <p key={index} className="text-gray-600 text-sm italic">
+                          {example}
+                        </p>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
