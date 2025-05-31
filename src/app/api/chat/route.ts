@@ -1,42 +1,40 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { NextRequest, NextResponse } from 'next/server'
 
-// Initialiseer de Gemini AI client
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
 export async function POST(request: NextRequest) {
   try {
-    // Controleer of de API key is ingesteld
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
-        { error: 'GEMINI_API_KEY is niet ingesteld' },
+        { error: 'GEMINI_API_KEY is not set' },
         { status: 500 }
       )
     }
 
-    // Haal de bericht data op uit de request
     const { message } = await request.json()
 
     if (!message) {
       return NextResponse.json(
-        { error: 'Bericht is vereist' },
+        { error: 'Message is required' },
         { status: 400 }
       )
     }
 
-    // Input validatie en sanitization
     if (typeof message !== 'string' || message.length > 4000) {
       return NextResponse.json(
-        { error: 'Bericht moet een string zijn van maximaal 4000 karakters' },
+        { error: 'Message must be a string of maximum 4000 characters' },
         { status: 400 }
       )
     }
 
-    // Haal het Gemini model op - gebruik het nieuwste model
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' })
 
-    // Genereer een response van Gemini
-    const result = await model.generateContent(message)
+    const prompt = `You are Justin Bieber. Always respond in English, using your characteristic style, slang, and personality.
+Include references to your music, life experiences, and career when relevant. Keep responses concise and authentic.
+Current message: ${message}`
+
+    const result = await model.generateContent(prompt)
     const response = await result.response
     const text = response.text()
 
@@ -46,10 +44,10 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Fout bij het aanroepen van Gemini API:', error)
+    console.error('Error calling Gemini API:', error)
     return NextResponse.json(
-      { error: 'Er is een fout opgetreden bij het verwerken van je bericht' },
+      { error: 'An error occurred while processing your message' },
       { status: 500 }
     )
   }
-} 
+}
