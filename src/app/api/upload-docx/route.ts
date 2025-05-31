@@ -10,12 +10,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Geen bestand gevonden' }, { status: 400 })
     }
 
-    // Check file type - now supports both .docx and .pdf
-    const isDocx = file.name.endsWith('.docx')
-    const isPdf = file.name.endsWith('.pdf')
-    
-    if (!isDocx && !isPdf) {
-      return NextResponse.json({ error: 'Alleen .docx en .pdf bestanden zijn toegestaan' }, { status: 400 })
+    // Only allow .docx files
+    if (!file.name.endsWith('.docx')) {
+      return NextResponse.json({ error: 'Alleen .docx bestanden zijn toegestaan' }, { status: 400 })
     }
 
     // Check file size (max 10MB)
@@ -27,32 +24,15 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
-    let textContent = ''
-    let fileType = ''
-
-    if (isDocx) {
-      // Extract text from .docx using mammoth
-      const result = await mammoth.extractRawText({ buffer })
-      textContent = result.value
-      fileType = 'Word Document (.docx)'
-    } else if (isPdf) {
-      // Extract text from .pdf using pdf-parse with dynamic import
-      try {
-        const pdfParse = (await import('pdf-parse')).default
-        const pdfData = await pdfParse(buffer)
-        textContent = pdfData.text
-        fileType = 'PDF Document (.pdf)'
-      } catch (pdfError) {
-        console.error('PDF parsing error:', pdfError)
-        return NextResponse.json({ error: 'Fout bij het lezen van het PDF bestand' }, { status: 400 })
-      }
-    }
+    // Extract text from .docx using mammoth
+    const result = await mammoth.extractRawText({ buffer })
+    const textContent = result.value
 
     return NextResponse.json({
       success: true,
       filename: file.name,
       size: file.size,
-      fileType: fileType,
+      fileType: 'Word Document (.docx)',
       content: textContent,
       wordCount: textContent.split(/\s+/).filter(word => word.length > 0).length,
       characterCount: textContent.length
@@ -72,4 +52,4 @@ export async function GET() {
     { error: 'GET method not allowed. Use POST to upload files.' },
     { status: 405 }
   )
-} 
+}

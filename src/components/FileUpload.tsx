@@ -13,11 +13,8 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
   const [result, setResult] = useState<any>(null)
 
   const handleFileSelect = async (file: File) => {
-    const isDocx = file.name.endsWith('.docx')
-    const isPdf = file.name.endsWith('.pdf')
-    
-    if (!isDocx && !isPdf) {
-      alert('Alleen .docx en .pdf bestanden zijn toegestaan!')
+    if (!file.name.endsWith('.docx')) {
+      alert('Alleen .docx bestanden zijn toegestaan!')
       return
     }
 
@@ -97,9 +94,7 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
       >
         <div className="flex flex-col items-center space-y-4">
           <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
+            <span className="text-2xl">📄</span>
           </div>
           
           <div>
@@ -113,7 +108,7 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
           
           <input
             type="file"
-            accept=".docx,.pdf"
+            accept=".docx"
             onChange={handleFileInput}
             className="hidden"
             id="file-input"
@@ -127,7 +122,7 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
           </label>
           
           <p className="text-xs text-gray-400">
-            Ondersteunde formaten: .docx, .pdf (max 10MB)
+            Ondersteund formaat: .docx (max 10MB)
           </p>
         </div>
       </div>
@@ -147,15 +142,7 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-              {uploadedFile.name.endsWith('.pdf') ? (
-                <svg className="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                </svg>
-              )}
+              <span className="text-xl">📄</span>
             </div>
             <div>
               <p className="font-medium text-green-800">{uploadedFile.name}</p>
@@ -173,9 +160,7 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-              <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <span className="text-xl">⚠️</span>
             </div>
             <div>
               <p className="font-medium text-red-800">Fout bij verwerken</p>
@@ -210,4 +195,4 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
       )}
     </div>
   )
-} 
+}
