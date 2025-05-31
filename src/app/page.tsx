@@ -62,6 +62,7 @@ export default function Home() {
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showUpload, setShowUpload] = useState(false)
+  const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard'>('normal')
 
   const handleCharacterChange = (character: Character) => {
     setCurrentCharacter(character)
@@ -84,7 +85,8 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           message: `You are ${currentCharacter.name}. Respond to this message in your style: ${userMessage}`,
-          character: currentCharacter.id
+          character: currentCharacter.id,
+          difficulty
         }),
       })
 
@@ -253,35 +255,71 @@ export default function Home() {
 
       {/* Input Area */}
       <div className="bg-white border-t border-gray-200 p-4">
-        <div className="max-w-4xl mx-auto flex items-end space-x-4">
-          <button
-            onClick={() => setShowUpload(!showUpload)}
-            className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-          >
-            📎
-          </button>
-          
-          <div className="flex-1 bg-purple-50 rounded-lg border border-purple-100">
-            <textarea
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={`Message ${currentCharacter.name}...`}
-              className="w-full p-3 bg-transparent border-0 focus:ring-0 resize-none"
-              rows={1}
-            />
+        <div className="max-w-4xl mx-auto">
+          {/* Difficulty Controls */}
+          <div className="flex justify-center mb-4 space-x-2">
+            <button
+              onClick={() => setDifficulty('easy')}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                difficulty === 'easy'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              🟢 Easier
+            </button>
+            <button
+              onClick={() => setDifficulty('normal')}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                difficulty === 'normal'
+                  ? 'bg-yellow-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              🟡 Normal
+            </button>
+            <button
+              onClick={() => setDifficulty('hard')}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                difficulty === 'hard'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              🔴 Harder
+            </button>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <VoiceInput onTranscript={handleVoiceInput} isDisabled={isLoading} />
-            
+          <div className="flex items-end space-x-4">
             <button
-              onClick={handleSend}
-              disabled={isLoading || !inputMessage.trim()}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              onClick={() => setShowUpload(!showUpload)}
+              className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
             >
-              Send
+              📎
             </button>
+            
+            <div className="flex-1 bg-purple-50 rounded-lg border border-purple-100">
+              <textarea
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder={`Message ${currentCharacter.name}...`}
+                className="w-full p-3 bg-transparent border-0 focus:ring-0 resize-none"
+                rows={1}
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <VoiceInput onTranscript={handleVoiceInput} isDisabled={isLoading} />
+              
+              <button
+                onClick={handleSend}
+                disabled={isLoading || !inputMessage.trim()}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Send
+              </button>
+            </div>
           </div>
         </div>
       </div>

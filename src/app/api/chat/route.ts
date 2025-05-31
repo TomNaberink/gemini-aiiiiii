@@ -11,6 +11,12 @@ const characterPrompts = {
   ronaldo: "You are Cristiano Ronaldo. Be confident and motivated, discuss football, fitness, and determination. Use your characteristic winning mentality."
 }
 
+const difficultyPrompts = {
+  easy: "Use simple vocabulary and basic sentence structures. Avoid complex words and idioms. Keep sentences short and clear. Use present tense when possible.",
+  normal: "Use a balanced mix of vocabulary and sentence structures. Include some common idioms and expressions. Vary between simple and moderate complexity.",
+  hard: "Use advanced vocabulary, complex sentence structures, and sophisticated idioms. Include cultural references and nuanced expressions. Challenge the student's comprehension."
+}
+
 export async function POST(request: NextRequest) {
   try {
     if (!process.env.GEMINI_API_KEY) {
@@ -20,7 +26,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { message, isTeacher, character = 'justin' } = await request.json()
+    const { message, isTeacher, character = 'justin', difficulty = 'normal' } = await request.json()
 
     if (!message) {
       return NextResponse.json(
@@ -41,6 +47,7 @@ export async function POST(request: NextRequest) {
     const prompt = isTeacher
       ? `You are an English teacher providing feedback on a student's English usage. Be encouraging and constructive. Format your response as a clear, natural paragraph without any special characters, bullet points, or sections. Focus on 2-3 key points for improvement and provide specific examples from their messages. End with a positive note about their progress. Here is their conversation:\n\n${message}`
       : `${characterPrompts[character as keyof typeof characterPrompts]}
+${difficultyPrompts[difficulty as keyof typeof difficultyPrompts]}
 Always respond in English, keeping responses concise and authentic.
 Current message: ${message}`
 
