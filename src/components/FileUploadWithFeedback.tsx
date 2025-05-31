@@ -13,13 +13,14 @@ interface FeedbackScores {
 interface FeedbackResult {
   scores: FeedbackScores
   feedback: {
-    content: string
-    argumentation: string
-    structure: string
-    language: string
-    originality: string
+    content: string[]
+    argumentation: string[]
+    structure: string[]
+    language: string[]
+    originality: string[]
   }
   totalScore: number
+  overallFeedback: string
 }
 
 export default function FileUploadWithFeedback() {
@@ -29,36 +30,94 @@ export default function FileUploadWithFeedback() {
   const [feedback, setFeedback] = useState<FeedbackResult | null>(null)
 
   const analyzeFeedback = (content: string): FeedbackResult => {
-    // This is where we would implement the actual analysis logic
-    // For now, we'll use a simplified scoring system
+    const words = content.split(/\s+/).filter(word => word.length > 0)
+    const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0)
+    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0)
     
-    const scores: FeedbackScores = {
-      content: Math.min(8, Math.max(1, Math.floor((content.length / 500) * 8))),
-      argumentation: Math.min(8, Math.max(1, Math.floor((content.split('omdat').length + content.split('dus').length) * 2))),
-      structure: Math.min(8, Math.max(1, Math.floor((content.split('\n\n').length / 3) * 8))),
-      language: Math.min(8, Math.max(1, Math.floor((1 - (content.split(' ').filter(w => w.length > 20).length / content.split(' ').length)) * 8))),
-      originality: Math.min(8, Math.max(1, Math.floor(Math.random() * 8)))
+    // Content Analysis
+    const contentScore = Math.min(8, Math.max(1, Math.floor((content.length / 500) * 8)))
+    const contentFeedback = []
+    if (words.length < 100) {
+      contentFeedback.push("• De tekst is aan de korte kant. Probeer meer diepgang toe te voegen.")
     }
+    if (sentences.length < 10) {
+      contentFeedback.push("• Voeg meer uitleg en voorbeelden toe om je punten te verduidelijken.")
+    }
+    contentFeedback.push(`• Je tekst bevat ${words.length} woorden en ${sentences.length} zinnen.`)
+    
+    // Argumentation Analysis
+    const argumentMarkers = ['omdat', 'dus', 'daarom', 'echter', 'bovendien', 'ten eerste', 'concluderend']
+    const argumentCount = argumentMarkers.reduce((count, marker) => 
+      count + content.toLowerCase().split(marker).length - 1, 0)
+    const argumentationScore = Math.min(8, Math.max(1, Math.floor((argumentCount / 5) * 8)))
+    const argumentationFeedback = []
+    if (argumentCount < 3) {
+      argumentationFeedback.push("• Gebruik meer verbindingswoorden om je argumenten te onderbouwen.")
+    }
+    argumentationFeedback.push(`• Je gebruikt ${argumentCount} argumentatieve verbindingen.`)
+    
+    // Structure Analysis
+    const structureScore = Math.min(8, Math.max(1, Math.floor((paragraphs.length / 4) * 8)))
+    const structureFeedback = []
+    if (paragraphs.length < 3) {
+      structureFeedback.push("• Je tekst heeft weinig paragrafen. Verdeel je tekst in meer logische delen.")
+    }
+    structureFeedback.push(`• Je tekst bevat ${paragraphs.length} paragrafen.`)
+    
+    // Language Analysis
+    const longWords = words.filter(w => w.length > 10).length
+    const complexityRatio = longWords / words.length
+    const languageScore = Math.min(8, Math.max(1, Math.floor((1 - complexityRatio) * 8)))
+    const languageFeedback = []
+    if (complexityRatio > 0.2) {
+      languageFeedback.push("• Je gebruikt veel complexe woorden. Overweeg eenvoudigere alternatieven.")
+    }
+    languageFeedback.push(`• ${Math.round(complexityRatio * 100)}% van je woorden zijn complex (>10 letters).`)
+    
+    // Originality Analysis
+    const commonPhrases = ['in conclusie', 'met andere woorden', 'zoals eerder genoemd']
+    const commonPhraseCount = commonPhrases.reduce((count, phrase) => 
+      count + content.toLowerCase().split(phrase).length - 1, 0)
+    const originalityScore = Math.min(8, Math.max(1, 8 - commonPhraseCount))
+    const originalityFeedback = []
+    if (commonPhraseCount > 3) {
+      originalityFeedback.push("• Probeer clichés te vermijden en gebruik meer originele formuleringen.")
+    }
+    originalityFeedback.push("• Zoek naar unieke invalshoeken om je argumenten te presenteren.")
 
-    const getFeedbackForScore = (score: number, category: string): string => {
-      if (score <= 2) return `Je ${category} needs significant improvement.`
-      if (score <= 4) return `Je ${category} is voldoende, maar kan beter.`
-      if (score <= 6) return `Je ${category} is goed!`
-      return `Uitstekend werk met je ${category}!`
+    const scores = {
+      content: contentScore,
+      argumentation: argumentationScore,
+      structure: structureScore,
+      language: languageScore,
+      originality: originalityScore
     }
 
     const totalScore = Object.values(scores).reduce((a, b) => a + b, 0) / 5
 
+    // Generate overall feedback based on total score
+    let overallFeedback = ""
+    if (totalScore <= 2) {
+      overallFeedback = "Je document heeft nog veel ruimte voor verbetering. Focus vooral op het uitbreiden van je argumenten en het verbeteren van de structuur."
+    } else if (totalScore <= 4) {
+      overallFeedback = "Je document toont basis begrip, maar kan baat hebben bij meer diepgang en betere onderbouwing van je argumenten."
+    } else if (totalScore <= 6) {
+      overallFeedback = "Je document is over het algemeen goed geschreven. Met wat extra aandacht voor detail kan het nog sterker worden."
+    } else {
+      overallFeedback = "Uitstekend werk! Je document toont een hoog niveau van begrip en is zeer goed uitgewerkt."
+    }
+
     return {
       scores,
       feedback: {
-        content: getFeedbackForScore(scores.content, 'inhoud'),
-        argumentation: getFeedbackForScore(scores.argumentation, 'argumentatie'),
-        structure: getFeedbackForScore(scores.structure, 'structuur'),
-        language: getFeedbackForScore(scores.language, 'taalgebruik'),
-        originality: getFeedbackForScore(scores.originality, 'originaliteit')
+        content: contentFeedback,
+        argumentation: argumentationFeedback,
+        structure: structureFeedback,
+        language: languageFeedback,
+        originality: originalityFeedback
       },
-      totalScore
+      totalScore,
+      overallFeedback
     }
   }
 
@@ -114,6 +173,13 @@ export default function FileUploadWithFeedback() {
     if (score <= 4) return 'text-orange-600'
     if (score <= 6) return 'text-green-600'
     return 'text-emerald-600'
+  }
+
+  const getScoreLabel = (score: number): string => {
+    if (score <= 2) return 'Onvoldoende'
+    if (score <= 4) return 'Voldoende'
+    if (score <= 6) return 'Goed'
+    return 'Uitstekend'
   }
 
   return (
@@ -186,35 +252,49 @@ export default function FileUploadWithFeedback() {
       {/* Feedback Display */}
       {feedback && (
         <div className="bg-white border border-gray-200 rounded-lg divide-y">
-          {/* Overall Score */}
-          <div className="p-4">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              Totale Score
-            </h3>
-            <div className="text-3xl font-bold text-purple-600">
-              {feedback.totalScore.toFixed(1)} / 8.0
+          {/* Overall Score and Feedback */}
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-gray-800">
+                Totale Beoordeling
+              </h3>
+              <div className="text-3xl font-bold text-purple-600">
+                {feedback.totalScore.toFixed(1)} / 8.0
+              </div>
             </div>
+            <p className="text-gray-600 bg-purple-50 p-4 rounded-lg">
+              {feedback.overallFeedback}
+            </p>
           </div>
 
           {/* Detailed Scores */}
-          <div className="p-4 space-y-4">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          <div className="p-6 space-y-6">
+            <h3 className="text-lg font-semibold text-gray-800">
               Gedetailleerde Feedback
             </h3>
             
             {Object.entries(feedback.scores).map(([category, score]) => (
-              <div key={category} className="border-b border-gray-100 last:border-0 pb-4 last:pb-0">
+              <div key={category} className="border rounded-lg p-4">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium text-gray-700 capitalize">
-                    {category}
-                  </span>
+                  <div>
+                    <span className="font-medium text-gray-700 capitalize">
+                      {category}
+                    </span>
+                    <span className={`ml-2 text-sm ${getScoreColor(score)}`}>
+                      ({getScoreLabel(score)})
+                    </span>
+                  </div>
                   <span className={`font-semibold ${getScoreColor(score)}`}>
                     {score} / 8
                   </span>
                 </div>
-                <p className="text-sm text-gray-600">
-                  {feedback.feedback[category as keyof typeof feedback.feedback]}
-                </p>
+                <div className="mt-3 space-y-1">
+                  {feedback.feedback[category as keyof typeof feedback.feedback].map((point, index) => (
+                    <p key={index} className="text-sm text-gray-600">
+                      {point}
+                    </p>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
