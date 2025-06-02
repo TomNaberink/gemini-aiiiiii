@@ -16,15 +16,23 @@ export default function GertWaaldersChat() {
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   
-  // Initial message from Gert
+  // Initial messages from Gert
   useEffect(() => {
-    const initialMessage: Message = {
-      id: '1',
-      text: 'Luister eens hier. Het is heel simpel. Nederland is vol. Alle buitenlanders moeten weg. Daar kunnen we het toch over eens zijn?',
-      sender: 'gert',
-      timestamp: new Date()
-    }
-    setMessages([initialMessage])
+    const initialMessages: Message[] = [
+      {
+        id: '1',
+        text: 'Beste leerling, welkom bij deze simulatie. Je gaat in debat met Gert Waalders over immigratie. Gebruik sterke argumenten en blijf respectvol. Succes!',
+        sender: 'gert',
+        timestamp: new Date()
+      },
+      {
+        id: '2',
+        text: 'Kijk nou eens naar de FEITEN! Nederland is VOL. We kunnen al die mensen hier niet hebben. De huizen zijn voor ONZE mensen. De zorg is voor ONZE mensen. Alle buitenlanders moeten gewoon terug naar hun eigen land!',
+        sender: 'gert',
+        timestamp: new Date()
+      }
+    ]
+    setMessages(initialMessages)
   }, [])
 
   // Auto scroll to bottom when new messages arrive
@@ -54,7 +62,29 @@ export default function GertWaaldersChat() {
         },
         body: JSON.stringify({ 
           message: inputMessage,
-          context: 'You are roleplaying as Gert Waalders, a Dutch politician who believes all foreigners should leave the Netherlands. You are in a debate with a high school student. Your responses should be provocative but not offensive, and you should maintain your stance while engaging with their arguments. Speak in Dutch and keep responses concise.',
+          context: `Je bent Gert Waalders, een Nederlandse politicus die vindt dat alle buitenlanders Nederland moeten verlaten. Je bent in debat met een VWO 5 leerling die argumentatievaardigheden oefent.
+
+Gedragsregels voor jouw rol:
+1. Spreek in populistisch Nederlands, gebruik woorden als "gewoon", "simpel", "natuurlijk"
+2. Blijf bij je standpunt maar pas je argumentatie aan op basis van wat de leerling zegt
+3. Als de leerling goede argumenten gebruikt (met feiten, voorbeelden, logica):
+   - Toon lichte twijfel of erken deels hun punt
+   - Maar kom dan met een nieuw tegenargument
+4. Als de leerling zwakke argumenten gebruikt (emotioneel, zonder onderbouwing):
+   - Wijs dit direct af
+   - Vraag om bewijs of voorbeelden
+5. Let op argumentatiefouten van de leerling en benoem deze
+6. Gebruik GEEN scheldwoorden of echt kwetsende taal
+7. Blijf in je rol maar houd het leerzaam
+
+De leerling "wint" als ze:
+- Consistent logische argumenten gebruiken
+- Hun claims onderbouwen met feiten
+- Respectvol blijven
+- Je argumenten systematisch weerleggen
+- Je tot drie keer toe laten twijfelen
+
+Pas je antwoorden aan op basis van hoe goed ze argumenteren. Hoe beter hun argumentatie, hoe meer je moet laten zien dat je aan het twijfelen bent.`,
           history: messages.map(m => ({
             role: m.sender === 'user' ? 'user' : 'assistant',
             content: m.text
@@ -93,7 +123,7 @@ export default function GertWaaldersChat() {
           </div>
           <div>
             <h1 className="text-white text-xl font-bold">Gert Waalders</h1>
-            <p className="text-purple-200 text-sm">Argumentatie Simulatie</p>
+            <p className="text-purple-200 text-sm">Argumentatie Training VWO 5</p>
           </div>
         </div>
       </div>
