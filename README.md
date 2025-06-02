@@ -135,4 +135,4 @@ Voel je vrij om deze template te forken, te verbeteren en pull requests in te di
 
 ---
 
-**💜 Gemaakt met passie door Tom Naberink. Veel bouwplezier!** 
+**💜 Gemaakt met passie door Tom Naberink. Veel bouwplezier!**
